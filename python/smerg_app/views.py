@@ -639,7 +639,13 @@ class Search(APIView):
                         query &= Q(range_starting__gte=float(request.GET.get('range_starting')))
                     if request.GET.get('range_ending'):
                         query &= Q(range_ending__lte=float(request.GET.get('range_ending')))
-                    search = SaleProfiles.objects.filter(query)
+                    if request.GET.get('ebitda'):
+                        query &= Q(ebitda__icontains=request.GET.get('ebitda'))
+                    if request.GET.get('preference'):
+                        query &= Q(preference__icontains=request.GET.get('preference '))
+                    if request.GET.get('top_selling'):
+                        query &= Q(top_selling__icontains=request.GET.get('top_selling'))
+                    search = SaleProfiles.objects.filter(query)   
                 serializer = SaleProfilesSerial(search, many=True)
                 return Response({'status':True,'data':serializer.data})
             return Response({'status':False,'message': 'User doesnot exist'})

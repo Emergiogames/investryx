@@ -90,6 +90,7 @@ class SaleProfiles(models.Model):
     top_selling = models.TextField(null=True, blank=True)
     income_source = models.TextField(null=True, blank=True)
     reason = models.TextField(null=True, blank=True)
+    asking_price=models.CharField(max_length=100,null=True,blank=True)
 
     # Investor-specific fields
     company = models.CharField(max_length=100, null=True, blank=True)
