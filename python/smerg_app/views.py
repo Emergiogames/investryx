@@ -952,7 +952,22 @@ class Featured(APIView):
                 serializer = serial(data, many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+        else:
+            data = []
+            entity_type = request.GET.get('type')
+
+            if entity_type == "advisor":
+                product_query = Profile.objects.filter(type="advisor").order_by('-id')
+                serializer_class = ProfileSerial
+            elif entity_type:
+                product_query = SaleProfiles.objects.filter(entity_type=entity_type).order_by('-id')
+                serializer_class = SaleProfilesSerial
+            else:
+                product_query = SaleProfiles.objects.all().order_by('-id')
+                serializer_class = SaleProfilesSerial
+            serializer = serializer_class(product_query, many=True)
+            return Response(serializer.data)
+        # return Response({'status':False,'message': 'Token is not passed'})
 
 # Latest Posts
 class Latest(APIView):
@@ -965,7 +980,11 @@ class Latest(APIView):
                 serializer = SaleProfilesSerial(product, many=True) if request.GET.get('type') and request.GET.get('type') != "advisor" else ProfileSerial(product, many=True) if request.GET.get('type') == "advisor" else SaleProfilesSerial(product, many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+        else:
+            product = SaleProfiles.objects.filter(entity_type=request.GET.get('type')).order_by('-id')[:10] if request.GET.get('type') and request.GET.get('type') != "advisor" else Profile.objects.filter(type = "advisor").order_by('-id') if request.GET.get('type') == "advisor" else  SaleProfiles.objects.all().order_by('-id')[:10]
+            serializer = SaleProfilesSerial(product, many=True) if request.GET.get('type') and request.GET.get('type') != "advisor" else ProfileSerial(product, many=True) if request.GET.get('type') == "advisor" else SaleProfilesSerial(product, many=True)
+            return Response(serializer.data)
+        # return Response({'status':False,'message': 'Token is not passed'})
 
 # Notification
 class Notifications(APIView):
@@ -1019,7 +1038,7 @@ class Graph(APIView):
         return Response({'status':False,'message': 'Token is not passed'})
 
 # Contact Us
-class Contact(APIView):
+class Contact(APIView):   
     @swagger_auto_schema(operation_description="Business creation",request_body=ContactSerial,
     responses={200: "{'status':True,'message': 'Contact created successfully'}",400:"Passes an error message"})
     def post(self,request):
