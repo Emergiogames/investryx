@@ -937,8 +937,8 @@ class Featured(APIView):
                 data = []
                 product = SaleProfiles.objects.filter(entity_type=request.GET.get('type')).order_by('-id') if request.GET.get('type') and request.GET.get('type') != "advisor" else Profile.objects.filter(type = "advisor").order_by('-id') if request.GET.get('type') == "advisor" else SaleProfiles.objects.all().order_by('-id')
                 for i in product:
-                    if Subscription.objects.filter(user=i.user).exists():
-                        subscribed = Subscription.objects.get(user=i.user)
+                    if Subscription.objects.filter(user=i.user, type=request.GET.get('type')).exists():
+                        subscribed = Subscription.objects.get(user=i.user, type=request.GET.get('type'))
                         if Plan.objects.get(id = subscribed.plan.id).feature:
                             data.append(i)
                 serial = SaleProfilesSerial if request.GET.get('type') and request.GET.get('type') != "advisor" else ProfileSerial if request.GET.get('type') == "advisor" else SaleProfilesSerial

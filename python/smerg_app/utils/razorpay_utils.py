@@ -6,11 +6,8 @@ async def verify_payment(transaction_key):
     client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
 
     try:
-        payment_details = await asyncio.to_thread(
-            client.payment.fetch,
-            transaction_key
-        )
-        
+        payment_details = await asyncio.to_thread(client.payment.fetch, transaction_key)
+
         if payment_details['status'] == 'captured':
             return True, payment_details
         else:
