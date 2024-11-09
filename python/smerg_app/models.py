@@ -264,7 +264,7 @@ class Notification(models.Model):
     created_on = models.DateField(auto_now=True)
 
 # For Popular searched items and recently Searched items
-class Search(models.Model):
+class Activity(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
     post = models.ForeignKey(SaleProfiles, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)  # Timestamp for the first interaction
