@@ -243,6 +243,7 @@ class Profiles(APIView):
                 user = UserProfile.objects.get(auth_token=request.headers.get('token'))
                 mutable_data = request.data.copy()
                 profile = Profile.objects.get(id=id)
+                mutable_data['verified'] = False
                 serializer = ProfileSerial(profile, data=mutable_data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
@@ -270,15 +271,14 @@ class Profiles(APIView):
 class BusinessList(APIView):
     @swagger_auto_schema(operation_description="Business post fetching",
     responses={200: "Business Details fetched succesfully",400:"Passes an error message"})
-    def get(self,request):
+    def get(self, request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                id=request.GET.get('id')
                 if id == 0:
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='business', block=False).order_by('-id'), many=True)
+                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='business', block=False, verified=True).order_by('-id'), many=True)
                 else:
                     user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='business', user=user, block=False).order_by('-id'), many=True)
+                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='business', user=user, block=False, verified=True).order_by('-id'), many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
@@ -330,6 +330,13 @@ class BusinessList(APIView):
                 business = SaleProfiles.objects.get(id=id)
                 serializer = SaleProfilesSerial(business, data=mutable_data,partial=True)
                 if serializer.is_valid():
+                    # has_changes = False
+                    # for key, value in mutable_data.items():
+                    #     if getattr(business, key) != value:
+                    #         has_changes = True
+                    #         break
+                    # if has_changes:
+                    #     business.verified = False
                     serializer.save()
                     return Response({'status':True})
                 return Response(serializer.errors)
@@ -355,15 +362,14 @@ class BusinessList(APIView):
 class InvestorList(APIView):
     @swagger_auto_schema(operation_description="Investor fetching",
     responses={200: "Investor Details fetched succesfully",400:"Passes an error message"})
-    def get(self,request):
+    def get(self,request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                id=request.GET.get('id')
                 if id == 0:
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='investor', block=False).order_by('-id'), many=True)
+                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='investor', block=False, verified=True).order_by('-id'), many=True)
                 else:
                     user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='investor', user=user, block=False).order_by('-id'), many=True)
+                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='investor', user=user, block=False, verified=True).order_by('-id'), many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
@@ -432,15 +438,14 @@ class InvestorList(APIView):
 class FranchiseList(APIView):
     @swagger_auto_schema(operation_description="Franchise fetching",
     responses={200: "Franchise Details fetched succesfully",400:"Passes an error message"})
-    def get(self,request):
+    def get(self,request, id):
         if request.headers.get('token'):
             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                id=request.GET.get('id')
                 if id == 0:
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='franchise', block=False).order_by('-id'), many=True)
+                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='franchise', block=False, verified=True).order_by('-id'), many=True)
                 else:
                     user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='franchise', user=user, block=False).order_by('-id'), many=True)
+                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='franchise', user=user, block=False, verified=True).order_by('-id'), many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
         return Response({'status':False,'message': 'Token is not passed'})
@@ -505,73 +510,73 @@ class FranchiseList(APIView):
         return Response({'status':False,'message': 'Token is not passed'})
 
 # Advisor
-class AdvisorList(APIView):
-    @swagger_auto_schema(operation_description="Advisor fetching",
-    responses={200: "Advisor Details fetched succesfully",400:"Passes an error message"})
-    def get(self,request):
-        if request.headers.get('token'):
-            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                id=request.GET.get('id')
-                if id == 0:
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='advisor', block=False).order_by('-id'), many=True)
-                else:
-                    user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                    serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='advisor', user=user, block=False).order_by('-id'), many=True)
-                return Response(serializer.data)
-            return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+# class AdvisorList(APIView):
+#     @swagger_auto_schema(operation_description="Advisor fetching",
+#     responses={200: "Advisor Details fetched succesfully",400:"Passes an error message"})
+#     def get(self,request):
+#         if request.headers.get('token'):
+#             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
+#                 id=request.GET.get('id')
+#                 if id == 0:
+#                     serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='advisor', block=False).order_by('-id'), many=True)
+#                 else:
+#                     user = UserProfile.objects.get(auth_token=request.headers.get('token'))
+#                     serializer = SaleProfilesSerial(SaleProfiles.objects.filter(entity_type='advisor', user=user, block=False).order_by('-id'), many=True)
+#                 return Response(serializer.data)
+#             return Response({'status':False,'message': 'User doesnot exist'})
+#         return Response({'status':False,'message': 'Token is not passed'})
 
-    @swagger_auto_schema(operation_description="Advisor creation",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Advisor created successfully'}",400:"Passes an error message"})
-    def post(self,request):
-        if request.headers.get('token'):
-            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                request.data['user'] = user.id
-                request.data['entity_type'] = 'advisor'
-                serializer = SaleProfilesSerial(data = request.data)
-                if serializer.is_valid():
-                    if Subscription.objects.filter(user=user).exists() and Subscription.objects.get(user=user).remaining_posts != 0:
-                        serializer.save()
-                        return Response({'status':True})
-                    return Response({'status':False,'message': 'Subscription doesnot exist'})
-                return Response(serializer.errors)
-            return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+#     @swagger_auto_schema(operation_description="Advisor creation",request_body=SaleProfilesSerial,
+#     responses={200: "{'status':True,'message': 'Advisor created successfully'}",400:"Passes an error message"})
+#     def post(self,request):
+#         if request.headers.get('token'):
+#             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
+#                 user = UserProfile.objects.get(auth_token=request.headers.get('token'))
+#                 request.data['user'] = user.id
+#                 request.data['entity_type'] = 'advisor'
+#                 serializer = SaleProfilesSerial(data = request.data)
+#                 if serializer.is_valid():
+#                     if Subscription.objects.filter(user=user).exists() and Subscription.objects.get(user=user).remaining_posts != 0:
+#                         serializer.save()
+#                         return Response({'status':True})
+#                     return Response({'status':False,'message': 'Subscription doesnot exist'})
+#                 return Response(serializer.errors)
+#             return Response({'status':False,'message': 'User doesnot exist'})
+#         return Response({'status':False,'message': 'Token is not passed'})
 
-    @swagger_auto_schema(operation_description="Advisor updation",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Advisor updated successfully'}",400:"Passes an error message"})
-    def patch(self,request,id):
-        if request.headers.get('token'):
-            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                user = UserProfile.objects.get(auth_token=request.headers.get('token'))
-                advisor = SaleProfiles.objects.get(id=id)
-                serializer = SaleProfilesSerial(advisor, data=request.data, partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response({'status':True})
-                return Response(serializer.errors)
-            return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+#     @swagger_auto_schema(operation_description="Advisor updation",request_body=SaleProfilesSerial,
+#     responses={200: "{'status':True,'message': 'Advisor updated successfully'}",400:"Passes an error message"})
+#     def patch(self,request,id):
+#         if request.headers.get('token'):
+#             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
+#                 user = UserProfile.objects.get(auth_token=request.headers.get('token'))
+#                 advisor = SaleProfiles.objects.get(id=id)
+#                 serializer = SaleProfilesSerial(advisor, data=request.data, partial=True)
+#                 if serializer.is_valid():
+#                     serializer.save()
+#                     return Response({'status':True})
+#                 return Response(serializer.errors)
+#             return Response({'status':False,'message': 'User doesnot exist'})
+#         return Response({'status':False,'message': 'Token is not passed'})
 
-    @swagger_auto_schema(operation_description="Advisor deletion",request_body=SaleProfilesSerial,
-    responses={200: "{'status':True,'message': 'Advisor deleted successfully'}",400:"Passes an error message"})
-    def delete(self,request,id):
-        if request.headers.get('token'):
-            if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
-                if id == 0:
-                    testimonial = Testimonial.objects.filter(user__id=UserProfile.objects.get(auth_token=request.headers.get('token')).id)
-                    advisor = SaleProfiles.objects.filter(user__id=UserProfile.objects.get(auth_token=request.headers.get('token')).id,entity_type='advisor')
-                    testimonial.delete()
-                    advisor.delete()
-                    return Response({'status':True})
-                advisor = SaleProfiles.objects.get(id=id)
-                testimonial = Testimonial.objects.filter(user=advisor.user)
-                testimonial.delete()
-                advisor.delete()
-                return Response({'status':True})
-            return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+#     @swagger_auto_schema(operation_description="Advisor deletion",request_body=SaleProfilesSerial,
+#     responses={200: "{'status':True,'message': 'Advisor deleted successfully'}",400:"Passes an error message"})
+#     def delete(self,request,id):
+#         if request.headers.get('token'):
+#             if UserProfile.objects.filter(auth_token=request.headers.get('token')).exists() and not UserProfile.objects.get(auth_token=request.headers.get('token')).block:
+#                 if id == 0:
+#                     testimonial = Testimonial.objects.filter(user__id=UserProfile.objects.get(auth_token=request.headers.get('token')).id)
+#                     advisor = SaleProfiles.objects.filter(user__id=UserProfile.objects.get(auth_token=request.headers.get('token')).id,entity_type='advisor')
+#                     testimonial.delete()
+#                     advisor.delete()
+#                     return Response({'status':True})
+#                 advisor = SaleProfiles.objects.get(id=id)
+#                 testimonial = Testimonial.objects.filter(user=advisor.user)
+#                 testimonial.delete()
+#                 advisor.delete()
+#                 return Response({'status':True})
+#             return Response({'status':False,'message': 'User doesnot exist'})
+#         return Response({'status':False,'message': 'Token is not passed'})
 
 # User information
 class UserView(APIView):
