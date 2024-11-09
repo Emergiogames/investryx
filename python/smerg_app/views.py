@@ -638,7 +638,13 @@ class Search(APIView):
                         query &= Q(range_starting__gte=float(request.GET.get('range_starting')))
                     if request.GET.get('range_ending'):
                         query &= Q(range_ending__lte=float(request.GET.get('range_ending')))
-                    search = SaleProfiles.objects.filter(query)
+                    if request.GET.get('ebitda'):
+                        query &= Q(ebitda__icontains=request.GET.get('ebitda'))
+                    if request.GET.get('preference'):
+                        query &= Q(preference__icontains=request.GET.get('preference '))
+                    if request.GET.get('top_selling'):
+                        query &= Q(top_selling__icontains=request.GET.get('top_selling'))
+                    search = SaleProfiles.objects.filter(query)   
                 serializer = SaleProfilesSerial(search, many=True)
                 return Response({'status':True,'data':serializer.data})
             return Response({'status':False,'message': 'User doesnot exist'})
@@ -720,7 +726,7 @@ class RecentActs(APIView):
                     return Response({'status':False,'message': 'Advisor cant add'})
                 request.data['product'] = request.data.get('productId')
 
-                ## Deleting and updating to front if the data is already in DB
+                # Deleting and updating to front if the data is already in DB
                 if RecentActivity.objects.filter(user=user,product=product).exists():
                     recent = RecentActivity.objects.filter(user=user,product=product).delete()
                 serializer = RecentSerial(data = request.data)
@@ -945,7 +951,22 @@ class Featured(APIView):
                 serializer = serial(data, many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+        else:
+            data = []
+            entity_type = request.GET.get('type')
+
+            if entity_type == "advisor":
+                product_query = Profile.objects.filter(type="advisor").order_by('-id')
+                serializer_class = ProfileSerial
+            elif entity_type:
+                product_query = SaleProfiles.objects.filter(entity_type=entity_type).order_by('-id')
+                serializer_class = SaleProfilesSerial
+            else:
+                product_query = SaleProfiles.objects.all().order_by('-id')
+                serializer_class = SaleProfilesSerial
+            serializer = serializer_class(product_query, many=True)
+            return Response(serializer.data)
+        # return Response({'status':False,'message': 'Token is not passed'})
 
 # Latest Posts
 class Latest(APIView):
@@ -958,7 +979,11 @@ class Latest(APIView):
                 serializer = SaleProfilesSerial(product, many=True) if request.GET.get('type') and request.GET.get('type') != "advisor" else ProfileSerial(product, many=True) if request.GET.get('type') == "advisor" else SaleProfilesSerial(product, many=True)
                 return Response(serializer.data)
             return Response({'status':False,'message': 'User doesnot exist'})
-        return Response({'status':False,'message': 'Token is not passed'})
+        else:
+            product = SaleProfiles.objects.filter(entity_type=request.GET.get('type')).order_by('-id')[:10] if request.GET.get('type') and request.GET.get('type') != "advisor" else Profile.objects.filter(type = "advisor").order_by('-id') if request.GET.get('type') == "advisor" else  SaleProfiles.objects.all().order_by('-id')[:10]
+            serializer = SaleProfilesSerial(product, many=True) if request.GET.get('type') and request.GET.get('type') != "advisor" else ProfileSerial(product, many=True) if request.GET.get('type') == "advisor" else SaleProfilesSerial(product, many=True)
+            return Response(serializer.data)
+        # return Response({'status':False,'message': 'Token is not passed'})
 
 # Notification
 class Notifications(APIView):
@@ -1012,7 +1037,7 @@ class Graph(APIView):
         return Response({'status':False,'message': 'Token is not passed'})
 
 # Contact Us
-class Contact(APIView):
+class Contact(APIView):   
     @swagger_auto_schema(operation_description="Business creation",request_body=ContactSerial,
     responses={200: "{'status':True,'message': 'Contact created successfully'}",400:"Passes an error message"})
     def post(self,request):
@@ -1093,28 +1118,7 @@ class Popularsearch(APIView):
         except SaleProfiles.DoesNotExist:
             return Response({'status': False, 'message': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
-    @swagger_auto_schema(operation_description="Update the count or details of a specific activity",
-                         request_body=ActivitySerial,
-                         responses={200: "Activity updated successfully", 400: "Error message"})
-    def patch(self, request, id):
-        token = request.headers.get('token')
-        if not token:
-            return Response({'status': False, 'message': 'Token is not passed'}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = UserProfile.objects.filter(auth_token=token, block=False).first()
-        if not user:
-            return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-        try:
-            activity = Activity.objects.get(id=id, user=user)
-            serializer = ActivitySerial(activity, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status': True, 'message': 'Successfully updated'}, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Activity.DoesNotExist:
-            return Response({'status': False, 'message': 'Activity not found'}, status=status.HTTP_404_NOT_FOUND)
-
+    
     @swagger_auto_schema(operation_description="Delete a specific activity",
                          responses={200: "Activity deleted successfully", 400: "Error message"})
     def delete(self, request, id):
@@ -1174,29 +1178,7 @@ class RecentSearchview(APIView):
         
         except SaleProfiles.DoesNotExist:
             return Response({'status': False, 'message': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-    @swagger_auto_schema(operation_description="Update the details of a specific activity",
-                         request_body=ActivitySerial,
-                         responses={200: "Activity updated successfully", 400: "Error message"})
-    def patch(self, request, id):
-        token = request.headers.get('token')
-        if not token:
-            return Response({'status': False, 'message': 'Token is not passed'}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = UserProfile.objects.filter(auth_token=token, block=False).first()
-        if not user:
-            return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-        try:
-            activity = Activity.objects.get(id=id, user=user)
-            serializer = ActivitySerial(activity, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status': True, 'message': 'Successfully updated'}, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Activity.DoesNotExist:
-            return Response({'status': False, 'message': 'Activity not found'}, status=status.HTTP_404_NOT_FOUND)
-
+    
     @swagger_auto_schema(operation_description="Delete a specific activity",
                          responses={200: "Activity deleted successfully", 400: "Error message"})
     def delete(self, request, id):
