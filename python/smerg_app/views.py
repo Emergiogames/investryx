@@ -726,7 +726,7 @@ class RecentActs(APIView):
                     return Response({'status':False,'message': 'Advisor cant add'})
                 request.data['product'] = request.data.get('productId')
 
-                ## Deleting and updating to front if the data is already in DB
+                # Deleting and updating to front if the data is already in DB
                 if RecentActivity.objects.filter(user=user,product=product).exists():
                     recent = RecentActivity.objects.filter(user=user,product=product).delete()
                 serializer = RecentSerial(data = request.data)
@@ -1118,28 +1118,7 @@ class Popularsearch(APIView):
         except SaleProfiles.DoesNotExist:
             return Response({'status': False, 'message': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
-    @swagger_auto_schema(operation_description="Update the count or details of a specific activity",
-                         request_body=ActivitySerial,
-                         responses={200: "Activity updated successfully", 400: "Error message"})
-    def patch(self, request, id):
-        token = request.headers.get('token')
-        if not token:
-            return Response({'status': False, 'message': 'Token is not passed'}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = UserProfile.objects.filter(auth_token=token, block=False).first()
-        if not user:
-            return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-        try:
-            activity = Activity.objects.get(id=id, user=user)
-            serializer = ActivitySerial(activity, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status': True, 'message': 'Successfully updated'}, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Activity.DoesNotExist:
-            return Response({'status': False, 'message': 'Activity not found'}, status=status.HTTP_404_NOT_FOUND)
-
+    
     @swagger_auto_schema(operation_description="Delete a specific activity",
                          responses={200: "Activity deleted successfully", 400: "Error message"})
     def delete(self, request, id):
@@ -1199,29 +1178,7 @@ class RecentSearchview(APIView):
         
         except SaleProfiles.DoesNotExist:
             return Response({'status': False, 'message': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-    @swagger_auto_schema(operation_description="Update the details of a specific activity",
-                         request_body=ActivitySerial,
-                         responses={200: "Activity updated successfully", 400: "Error message"})
-    def patch(self, request, id):
-        token = request.headers.get('token')
-        if not token:
-            return Response({'status': False, 'message': 'Token is not passed'}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = UserProfile.objects.filter(auth_token=token, block=False).first()
-        if not user:
-            return Response({'status': False, 'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-        try:
-            activity = Activity.objects.get(id=id, user=user)
-            serializer = ActivitySerial(activity, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status': True, 'message': 'Successfully updated'}, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Activity.DoesNotExist:
-            return Response({'status': False, 'message': 'Activity not found'}, status=status.HTTP_404_NOT_FOUND)
-
+    
     @swagger_auto_schema(operation_description="Delete a specific activity",
                          responses={200: "Activity deleted successfully", 400: "Error message"})
     def delete(self, request, id):
